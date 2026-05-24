@@ -1,0 +1,30 @@
+mRemoteNXT
+Copyright (c) 2026 Razvan Cremenescu
+
+This product is licensed under the GNU General Public License version 2 or
+(at your option) any later version. See LICENSE for the full text.
+
+This product includes or links to third-party software:
+
+================================================================================
+1. mRemoteNG icon set
+   Source: https://github.com/mRemoteNG/mRemoteNG (Resources/Icons/)
+   Copyright (c) The mRemoteNG team
+   License: GNU GPL v2.0
+================================================================================
+2. FreeRDP
+   Source: https://github.com/FreeRDP/FreeRDP
+   Copyright (c) The FreeRDP authors
+   License: Apache License 2.0
+   Linked dynamically via Homebrew packages (libfreerdp-client3, libfreerdp3,
+   libwinpr3).
+================================================================================
+3. SwiftTerm
+   Source: https://github.com/migueldeicaza/SwiftTerm
+   Copyright (c) Miguel de Icaza and contributors
+   License: MIT License
+   Bundled as Swift Package dependency.
+================================================================================
+
+No affiliation with the mRemoteNG project. "mRemoteNG" is used only as a
+compatibility reference for the confCons.xml file format.

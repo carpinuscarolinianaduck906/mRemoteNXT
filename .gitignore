@@ -1,0 +1,26 @@
+## Build artifacts
+.build/
+.build-xcode/
+DerivedData/
+build/
+*.xcodeproj/
+*.app/
+*.dmg
+
+## Xcode user state
+xcuserdata/
+*.xcuserstate
+.swiftpm/
+
+## macOS
+.DS_Store
+.AppleDouble
+
+## User data (date utilizator — NU se urca niciodata)
+confCons*.xml
+backups/
+
+## Editor
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,54 @@
+name: mRemoteNXT
+options:
+  bundleIdPrefix: ro.cremenescu
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+packages:
+  MRNG:
+    path: .
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: "1.2.0"
+
+targets:
+  mRemoteNXT:
+    type: application
+    platform: macOS
+    sources:
+      - App
+    dependencies:
+      - package: MRNG
+        product: MRNGCore
+      - package: SwiftTerm
+        product: SwiftTerm
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleIconFile: AppIcon
+        LSMinimumSystemVersion: "14.0"
+        NSHighResolutionCapable: true
+        LSApplicationCategoryType: public.app-category.utilities
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ro.cremenescu.mRemoteNXT
+        PRODUCT_NAME: mRemoteNXT
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_ALLOWED: YES
+        ENABLE_HARDENED_RUNTIME: NO
+        SWIFT_VERSION: "5.9"
+        SWIFT_OBJC_BRIDGING_HEADER: App/Bridging-Header.h
+        CLANG_ENABLE_MODULES: YES
+        HEADER_SEARCH_PATHS:
+          - /opt/homebrew/opt/freerdp/include/freerdp3
+          - /opt/homebrew/opt/freerdp/include/winpr3
+          - /opt/homebrew/opt/openssl@3/include
+        LIBRARY_SEARCH_PATHS:
+          - /opt/homebrew/opt/freerdp/lib
+        OTHER_LDFLAGS:
+          - -lfreerdp-client3
+          - -lfreerdp3
+          - -lwinpr3

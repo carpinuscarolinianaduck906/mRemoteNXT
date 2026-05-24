@@ -1,0 +1,603 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// mRemoteNXT — Copyright (c) 2026 Razvan Cremenescu
+// See LICENSE for full text.
+
+import SwiftUI
+import MRNGCore
+import UniformTypeIdentifiers
+
+extension MRNGNode {
+    var sfSymbol: String { iconInfo.symbol }
+
+    /// Mapare nume iconita mRemoteNG -> (SF Symbol, culoare). Fallback pe protocol.
+    var iconInfo: (symbol: String, color: Color) {
+        if isContainer { return ("folder.fill", .accentColor) }
+        switch icon {
+        case "Windows":         return ("pc", .blue)
+        case "Linux":           return ("terminal", .teal)
+        case "SSH":             return ("terminal", .green)
+        case "Switch":          return ("network", .indigo)
+        case "Firewall":        return ("flame", .red)
+        case "Virtual Machine": return ("macwindow", .purple)
+        case "Terminal Server": return ("display", .blue)
+        case "Router":          return ("network", .green)
+        case "SharePoint":      return ("square.grid.2x2", .teal)
+        case "Backup":          return ("externaldrive", .brown)
+        case "Web Server":      return ("globe", .blue)
+        case "Build Server":    return ("hammer", .orange)
+        case "ESX":             return ("square.stack.3d.up.fill", .purple)
+        case "Workstation":     return ("desktopcomputer", .gray)
+        case "Database":        return ("cylinder.split.1x2", .brown)
+        case "WiFi":            return ("wifi", .blue)
+        case "Remote Desktop":  return ("display", .blue)
+        case "Anti Virus":      return ("shield", .green)
+        default:                return protocolIcon
+        }
+    }
+
+    private var protocolIcon: (symbol: String, color: Color) {
+        switch protocolType {
+        case "SSH1", "SSH2": return ("terminal", .green)
+        case "Telnet":       return ("terminal", .orange)
+        case "RDP":          return ("display", .blue)
+        case "HTTP", "HTTPS":return ("globe", .blue)
+        case "VNC":          return ("rectangle.on.rectangle", .purple)
+        case "IntApp":       return ("app.badge", .gray)
+        default:             return ("network", .secondary)
+        }
+    }
+}
+
+struct ContentView: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        NavigationSplitView {
+            sidebar
+                .frame(minWidth: 280)
+        } detail: {
+            detail
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                Button { model.addConnection() } label: { Image(systemName: "plus.rectangle") }
+                    .help("Conexiune noua")
+                Button { model.addFolder() } label: { Image(systemName: "folder.badge.plus") }
+                    .help("Folder nou")
+                Button { model.save() } label: {
+                    Image(systemName: model.dirty ? "square.and.arrow.down.fill" : "square.and.arrow.down")
+                }.help("Salveaza (Cmd+S)").disabled(!model.dirty)
+                Button { model.expandAll() } label: { Image(systemName: "arrow.up.backward.and.arrow.down.forward") }
+                    .help("Expandeaza tot")
+                Button { model.collapseAll() } label: { Image(systemName: "arrow.down.forward.and.arrow.up.backward") }
+                    .help("Restrange tot")
+                Button { model.sortAlphabetical() } label: { Image(systemName: "arrow.up.arrow.down") }
+                    .help("Sorteaza alfabetic (conexiuni, apoi foldere)")
+                Button { if model.selectedNodeID != nil { model.editorVisible = true } } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }.help("Editeaza conexiunea selectata...")
+                .disabled(model.selectedNodeID == nil)
+            }
+            ToolbarItem(placement: .principal) {
+                if !model.sessions.isEmpty { PanelTabBar() }
+            }
+        }
+        .navigationTitle("")
+        .confirmationDialog(
+            "Stergi \"\(model.pendingDelete?.name ?? "")\"?",
+            isPresented: Binding(get: { model.pendingDelete != nil },
+                                 set: { if !$0 { model.pendingDelete = nil } }),
+            presenting: model.pendingDelete
+        ) { node in
+            Button("Sterge", role: .destructive) { model.deleteNode(node); model.pendingDelete = nil }
+            Button("Anuleaza", role: .cancel) { model.pendingDelete = nil }
+        } message: { node in
+            Text(node.isContainer ? "Folderul si tot continutul vor fi sterse (nesalvat pana la Salvare)." : "Conexiunea va fi stearsa.")
+        }
+        .sheet(isPresented: $model.editorVisible) {
+            if let id = model.selectedNodeID {
+                EditorSheet(nodeID: id).environmentObject(model)
+            }
+        }
+    }
+
+    @ViewBuilder private var sidebar: some View {
+        if model.doc != nil {
+            VStack(spacing: 0) {
+                List {
+                    ForEach(model.visibleRows()) { row in
+                        TreeRow(row: row)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .environment(\.defaultMinListRowHeight, model.rowHeight)
+                .searchable(text: $model.searchText, placement: .sidebar, prompt: "Cauta conexiuni")
+                .frame(maxHeight: .infinity)
+
+                // Status bar (read-only) cu IP/User/Pass + click-to-copy.
+                ConnectionStatusBar()
+            }
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: "tray")
+                    .font(.largeTitle).foregroundStyle(.secondary)
+                Text(model.loadError ?? "Niciun fisier incarcat")
+                    .foregroundStyle(.secondary)
+                Button("Deschide confCons.xml...") { model.openFilePanel() }
+            }
+            .padding()
+        }
+    }
+
+    @ViewBuilder private var detail: some View {
+        VStack(spacing: 0) {
+            if !model.sessions.isEmpty {
+                SessionTabBar()
+                Divider()
+            }
+            ZStack {
+                // Sesiunile raman vii in ierarhie -> procesul ssh nu reporneste la schimbarea tab-ului.
+                ForEach(model.sessions) { session in
+                    SessionView(session: session,
+                                isActive: session.id == model.selectedSessionID,
+                                fontSize: model.terminalFontSize)
+                        .opacity(session.id == model.selectedSessionID ? 1 : 0)
+                        .allowsHitTesting(session.id == model.selectedSessionID)
+                }
+                if model.selectedSessionID == nil {
+                    placeholder
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var editorInspector: some View {
+        if let node = model.node(byID: model.selectedNodeID) {
+            NodeDetailView(node: node)
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: "slider.horizontal.3").font(.title).foregroundStyle(.secondary)
+                Text("Selecteaza o conexiune ca s-o editezi").foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+        }
+    }
+
+    private var placeholder: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "rectangle.connected.to.line.below")
+                .font(.system(size: 40)).foregroundStyle(.secondary)
+            Text("Selecteaza o conexiune din arbore")
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct TreeRow: View {
+    @EnvironmentObject var model: AppModel
+    let row: FlatRow
+    @State private var hovering = false
+    @State private var rowHeight: CGFloat = 26
+
+    private var isDropInto: Bool {
+        model.dropIndicator?.id == row.node.id && model.dropIndicator?.pos == .into
+    }
+    private var rowFill: Color {
+        if model.selectedNodeID == row.node.id { return Color.accentColor.opacity(0.22) }
+        if isDropInto { return Color.accentColor.opacity(0.30) }
+        if hovering { return Color.primary.opacity(0.07) }
+        return .clear
+    }
+
+    var body: some View {
+        let node = row.node
+        HStack(spacing: 4) {
+            // Linii de ghidaj pentru arbore (ca in mRemoteNG Windows).
+            ForEach(0..<row.depth, id: \.self) { _ in
+                Color.clear.frame(width: 14)
+                    .overlay(alignment: .leading) {
+                        Rectangle().fill(Color.secondary.opacity(0.22)).frame(width: 1)
+                    }
+            }
+            if node.isContainer {
+                Button {
+                    model.toggleExpanded(node.id)
+                } label: {
+                    Image(systemName: model.expandedIDs.contains(node.id) ? "chevron.down" : "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 12)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Color.clear.frame(width: 12, height: 1)
+            }
+            NodeRow(node: node)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: model.rowHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 5)
+                .fill(rowFill)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .strokeBorder(Color.accentColor, lineWidth: isDropInto ? 1.5 : 0)
+                )
+        )
+        .background(
+            GeometryReader { g in
+                Color.clear.onAppear { rowHeight = g.size.height }
+                    .onChange(of: g.size.height) { _, h in rowHeight = h }
+            }
+        )
+        .overlay(alignment: .top) {
+            if model.dropIndicator?.id == node.id && model.dropIndicator?.pos == .above {
+                insertionLine
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if model.dropIndicator?.id == node.id && model.dropIndicator?.pos == .below {
+                insertionLine
+            }
+        }
+        .contentShape(Rectangle())
+        .onHover { hovering = $0 }
+        .onTapGesture { model.selectedNodeID = node.id }
+        .contextMenu {
+            Button("Editeaza...") {
+                model.selectedNodeID = node.id
+                model.editorVisible = true
+            }
+            .keyboardShortcut(.return)
+            Divider()
+            if !node.isContainer {
+                Button("Conecteaza") { model.connect(node) }
+                if node.protocolType.hasPrefix("SSH") {
+                    Button("Transfer fisiere (SFTP)") { model.openSFTP(node) }
+                }
+                if !model.externalTools.isEmpty {
+                    Menu("Unelte externe") {
+                        ForEach(model.externalTools) { tool in
+                            Button(tool.name) { model.runTool(tool, on: node) }
+                        }
+                    }
+                }
+                Divider()
+            }
+            Button("Conexiune noua aici") { model.selectedNodeID = node.id; model.addConnection() }
+            Button("Folder nou aici") { model.selectedNodeID = node.id; model.addFolder() }
+            Divider()
+            Button("Sterge", role: .destructive) { model.pendingDelete = node }
+        }
+        .simultaneousGesture(TapGesture(count: 2).onEnded {
+            model.selectedNodeID = node.id
+            if node.isContainer { model.toggleExpanded(node.id) }
+            else { model.connect(node) }
+        })
+        .onDrag {
+            NSItemProvider(object: node.id as NSString)
+        } preview: {
+            HStack(spacing: 6) {
+                Image(systemName: node.iconInfo.symbol).foregroundStyle(node.iconInfo.color)
+                Text(node.name)
+            }
+            .padding(8)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .onDrop(of: [.text], delegate: RowDropDelegate(node: node, rowHeight: rowHeight, model: model))
+    }
+
+    private var insertionLine: some View {
+        Rectangle()
+            .fill(Color.accentColor)
+            .frame(height: 2)
+            .overlay(alignment: .leading) {
+                Circle().fill(Color.accentColor).frame(width: 6, height: 6).offset(x: -2)
+            }
+            .padding(.leading, CGFloat(row.depth) * 14 + 18)
+            .allowsHitTesting(false) // sa nu intercepteze drop-ul -> performDrop se declanseaza, curatare instant
+    }
+}
+
+/// Drop cu pozitie (deasupra / dedesubt / in folder), in functie de cursor.
+struct RowDropDelegate: DropDelegate {
+    let node: MRNGNode
+    let rowHeight: CGFloat
+    let model: AppModel
+
+    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.text]) }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let y = info.location.y
+        let pos: DropPos
+        if node.isContainer {
+            if y < rowHeight * 0.25 { pos = .above }
+            else if y > rowHeight * 0.75 { pos = .below }
+            else { pos = .into }
+        } else {
+            pos = y < rowHeight * 0.5 ? .above : .below
+        }
+        model.setDropIndicator(DropIndicator(id: node.id, pos: pos))
+        return DropProposal(operation: .move) // cursor "mutare", nu "+"
+    }
+
+    func dropExited(info: DropInfo) {
+        if model.dropIndicator?.id == node.id { model.clearDropIndicator() }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let pos = model.dropIndicator?.pos ?? .into
+        model.clearDropIndicator()
+        guard let provider = info.itemProviders(for: [.text]).first else { return false }
+        let target = node
+        provider.loadObject(ofClass: NSString.self) { obj, _ in
+            guard let idStr = obj as? String else { return }
+            DispatchQueue.main.async {
+                model.performMove(draggedID: idStr, target: target, pos: pos)
+            }
+        }
+        return true
+    }
+}
+
+/// Iconita unui nod: folder pentru containere, iconita reala mRemoteNG dupa atributul Icon,
+/// fallback la SF Symbol pe protocol.
+struct NodeIconView: View {
+    // Valori (nu obiectul) ca SwiftUI sa re-randeze cand se schimba iconita.
+    let isContainer: Bool
+    let iconName: String
+    let fallbackSymbol: String
+    let fallbackColor: Color
+
+    init(node: MRNGNode) {
+        isContainer = node.isContainer
+        iconName = node.icon
+        let info = node.iconInfo
+        fallbackSymbol = info.symbol
+        fallbackColor = info.color
+    }
+
+    var body: some View {
+        if isContainer {
+            Image(systemName: "folder.fill").resizable().scaledToFit().foregroundStyle(Color.accentColor)
+        } else if let img = IconLibrary.image(iconName) {
+            Image(nsImage: img).resizable().interpolation(.high).scaledToFit()
+        } else {
+            Image(systemName: fallbackSymbol).resizable().scaledToFit().foregroundStyle(fallbackColor)
+        }
+    }
+}
+
+struct NodeRow: View {
+    @EnvironmentObject var model: AppModel
+    let node: MRNGNode
+    var body: some View {
+        HStack(spacing: 6) {
+            NodeIconView(node: node).frame(width: 16, height: 16)
+            Text(node.name)
+                .font(.system(size: model.uiFontSize))
+                .lineLimit(1)
+            if !node.isContainer && model.showProtocol {
+                Spacer(minLength: 4)
+                Text(node.protocolType)
+                    .font(.system(size: max(9, model.uiFontSize - 4)))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+struct NodeDetailView: View {
+    @EnvironmentObject var model: AppModel
+    let node: MRNGNode
+    @State private var passwordPlain: String = ""
+
+    private let protocols = ["RDP", "SSH2", "SSH1", "Telnet", "VNC", "HTTP", "HTTPS", "IntApp"]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    NodeIconView(node: node).frame(width: 16, height: 16)
+                    Text(node.isContainer ? "Folder" : "Conexiune")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 2)
+
+                field("Nume", attr("Name"))
+
+                if node.isContainer {
+                    Text("\(node.children.count) elemente").foregroundStyle(.secondary).padding(.top, 4)
+                } else {
+                    HStack {
+                        Text("Protocol").font(.callout).frame(width: 75, alignment: .trailing).foregroundStyle(.secondary)
+                        Picker("", selection: attr("Protocol", inherit: "InheritProtocol")) {
+                            ForEach(protocols, id: \.self) { Text($0).tag($0) }
+                        }.labelsHidden()
+                        Spacer()
+                    }
+                    HStack {
+                        Text("Iconita").font(.callout).frame(width: 75, alignment: .trailing).foregroundStyle(.secondary)
+                        Picker("", selection: attr("Icon", inherit: "InheritIcon")) {
+                            ForEach(IconLibrary.names, id: \.self) { n in
+                                HStack {
+                                    if let img = IconLibrary.image(n) {
+                                        Image(nsImage: img).resizable().frame(width: 14, height: 14)
+                                    }
+                                    Text(n)
+                                }.tag(n)
+                            }
+                        }.labelsHidden()
+                        Spacer()
+                    }
+                    field("Host", attr("Hostname"))
+                    field("Port", attr("Port", inherit: "InheritPort"))
+                    field("Utilizator", attr("Username", inherit: "InheritUsername"))
+                    field("Domeniu", attr("Domain", inherit: "InheritDomain"))
+                    HStack {
+                        Text("Parola").font(.callout).frame(width: 75, alignment: .trailing).foregroundStyle(.secondary)
+                        SecureField("", text: $passwordPlain)
+                            .textFieldStyle(.roundedBorder).frame(maxWidth: .infinity)
+                            .onChange(of: passwordPlain) { _, newValue in
+                                node.attributes["Password"] = newValue.isEmpty ? "" : model.encrypt(newValue)
+                                node.attributes["InheritPassword"] = "false"
+                                model.markDirty()
+                            }
+                    }
+                    field("Descriere", attr("Descr", inherit: "InheritDescription"))
+                    field("Panel", attr("Panel", inherit: "InheritPanel"))
+
+                    Button { model.connect(node) } label: {
+                        Label("Conecteaza", systemImage: "bolt.horizontal.circle")
+                    }
+                    .buttonStyle(.bordered).padding(.top, 6)
+                }
+
+                Divider().padding(.vertical, 6)
+                Button { model.save() } label: {
+                    Label(model.dirty ? "Salveaza modificarile" : "Salvat",
+                          systemImage: model.dirty ? "square.and.arrow.down" : "checkmark.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!model.dirty)
+                .keyboardShortcut("s")
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .controlSize(.small)
+        }
+        .onAppear { passwordPlain = model.decryptedPassword(for: node) }
+        .id(node.id)
+    }
+
+    private func field(_ label: String, _ binding: Binding<String>) -> some View {
+        HStack(spacing: 6) {
+            Text(label).font(.callout).frame(width: 75, alignment: .trailing).foregroundStyle(.secondary)
+            TextField("", text: binding).textFieldStyle(.roundedBorder).frame(maxWidth: .infinity)
+        }
+    }
+
+    private func attr(_ key: String, inherit: String? = nil) -> Binding<String> {
+        Binding(
+            get: { node.attributes[key] ?? "" },
+            set: { v in
+                node.attributes[key] = v
+                if let inherit { node.attributes[inherit] = "false" }
+                model.markDirty()
+            })
+    }
+}
+
+struct PanelTabBar: View {
+    @EnvironmentObject var model: AppModel
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(model.panels(), id: \.self) { panel in
+                    Button { model.selectPanel(panel) } label: {
+                        Text(panel)
+                            .font(.callout)
+                            .fontWeight(panel == model.selectedPanel ? .semibold : .regular)
+                            .padding(.horizontal, 12).padding(.vertical, 5)
+                            .background(panel == model.selectedPanel ? Color.accentColor.opacity(0.22) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            .padding(.horizontal, 8).padding(.vertical, 4)
+        }
+    }
+}
+
+struct SessionTabBar: View {
+    @EnvironmentObject var model: AppModel
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 2) {
+                ForEach(model.sessions(inPanel: model.selectedPanel)) { session in
+                    HStack(spacing: 6) {
+                        NodeIconView(node: session.node).frame(width: 14, height: 14)
+                        Text(session.title).lineLimit(1)
+                        Button {
+                            model.closeSession(session.id)
+                        } label: {
+                            Image(systemName: "xmark").font(.caption2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(session.id == model.selectedSessionID
+                                ? Color.accentColor.opacity(0.22) : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .onTapGesture { model.selectedSessionID = session.id }
+                    .contextMenu {
+                        Button("Reconecteaza") { model.reconnect(session) }
+                        Button("Deconecteaza") { model.closeSession(session.id) }
+                        if session.kind == .rdp {
+                            Divider()
+                            Button("Trimite Ctrl+Alt+Del") { model.sendCtrlAltDel(session) }
+                        }
+                        Divider()
+                        Button("Redenumeste tab...") { model.promptAndRename(session) }
+                        Button("Duplica tab") { model.duplicate(session) }
+                        if !session.password.isEmpty {
+                            Divider()
+                            Button("Copiaza parola") { model.copyPassword(session) }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+struct SessionView: View {
+    @EnvironmentObject var model: AppModel
+    let session: Session
+    var isActive: Bool = false
+    var fontSize: Double = 13
+    var body: some View {
+        switch session.kind {
+        case .ssh, .telnet, .sftp, .externalTool:
+            TerminalContainer(session: session, isActive: isActive, fontSize: fontSize, theme: model.terminalTheme)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .rdp:
+            RDPContainer(session: session, isActive: isActive, onDisconnect: {
+                if model.closeTabOnDisconnect { model.closeSession(session.id) }
+            })
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .http:
+            HTTPContainer(session: session)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .externalApp:
+            unsupported("Aplicatie externa (IntApp) urmeaza.")
+        case .unsupported:
+            unsupported("Protocol nesuportat: \(session.node.protocolType)")
+        }
+    }
+
+    private func unsupported(_ msg: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: session.node.sfSymbol).font(.system(size: 36))
+            Text("\(session.node.hostname):\(session.node.port)").font(.headline)
+            Text(msg).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
