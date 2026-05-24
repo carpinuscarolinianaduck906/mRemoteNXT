@@ -48,6 +48,8 @@ struct MRemoteApp: App {
 }
 
 struct SettingsView: View {
+    // Observe so all tab labels re-evaluate t(...) on language change.
+    @EnvironmentObject var lang: LanguageManager
     var body: some View {
         TabView {
             AppearanceSettings()
@@ -58,6 +60,7 @@ struct SettingsView: View {
                 .tabItem { Label(t("Settings.Language"), systemImage: "globe") }
         }
         .frame(width: 460, height: 420)
+        .id(lang.choice) // force SwiftUI to rebuild tab item labels on switch
     }
 }
 
@@ -127,7 +130,7 @@ struct LanguageSettings: View {
                         Text(c.displayName).tag(c)
                     }
                 }
-                .pickerStyle(.inline)
+                .pickerStyle(.menu)
                 Text(t("Settings.LanguageNote"))
                     .font(.caption).foregroundStyle(.secondary)
             }

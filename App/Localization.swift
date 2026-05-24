@@ -25,7 +25,7 @@ final class LanguageManager: ObservableObject {
         var id: String { rawValue }
         var displayName: String {
             switch self {
-            case .auto: return NSLocalizedString("Language.Auto", comment: "System default")
+            case .auto: return t("Language.Auto")
             case .en:   return "English"
             case .ro:   return "Romana"
             }

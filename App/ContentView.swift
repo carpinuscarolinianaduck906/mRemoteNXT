@@ -50,6 +50,7 @@ extension MRNGNode {
 
 struct ContentView: View {
     @EnvironmentObject var model: AppModel
+    @EnvironmentObject var lang: LanguageManager
 
     var body: some View {
         NavigationSplitView {
@@ -83,6 +84,7 @@ struct ContentView: View {
             }
         }
         .navigationTitle("")
+        .id(lang.choice) // force whole tree rebuild on language switch
         .confirmationDialog(
             String(format: t("Delete.Title"), model.pendingDelete?.name ?? ""),
             isPresented: Binding(get: { model.pendingDelete != nil },
