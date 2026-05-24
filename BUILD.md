@@ -1,39 +1,41 @@
-# Build mRemoteNXT din sursa
+# Build mRemoteNXT from source
 
-## 1. Dependinte de sistem
+> Romanian: see [BUILD.ro.md](BUILD.ro.md)
+
+## 1. System dependencies
 
 ### Xcode + Metal Toolchain
 
 ```bash
-xcode-select --install   # daca n-ai deja
+xcode-select --install   # if not already installed
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-# Pe macOS 26+ / Xcode 26+, Metal Toolchain e o componenta separata:
+# On macOS 26+ / Xcode 26+, the Metal Toolchain is a separate component:
 xcodebuild -downloadComponent MetalToolchain
 ```
 
-### Homebrew + librarii
+### Homebrew + libraries
 
 ```bash
 brew install freerdp xcodegen
 ```
 
-`freerdp` ofera `libfreerdp-client3`, `libfreerdp3`, `libwinpr3` la
-`/opt/homebrew/opt/freerdp/`. Path-urile sunt cablate in `project.yml`
+`freerdp` provides `libfreerdp-client3`, `libfreerdp3`, `libwinpr3` at
+`/opt/homebrew/opt/freerdp/`. The paths are wired into `project.yml`
 (`HEADER_SEARCH_PATHS`, `LIBRARY_SEARCH_PATHS`).
 
-## 2. Generare proiect Xcode
+## 2. Generate the Xcode project
 
 ```bash
 cd mRemoteNXT
 xcodegen generate
 ```
 
-Asta produce `mRemoteNXT.xcodeproj` din `project.yml` + `Package.swift`.
-Re-ruleaza ori de cate ori adaugi/sterge fisiere in `App/`.
+This produces `mRemoteNXT.xcodeproj` from `project.yml` + `Package.swift`.
+Re-run it whenever you add or remove files in `App/`.
 
 ## 3. Build
 
-### Din linia de comanda
+### Command line
 
 ```bash
 xcodebuild \
@@ -44,37 +46,38 @@ xcodebuild \
   build
 ```
 
-Binarul rezultat: `.build-xcode/Build/Products/Debug/mRemoteNXT.app`.
+Resulting binary: `.build-xcode/Build/Products/Debug/mRemoteNXT.app`.
 
-### Din Xcode
+### From Xcode
 
 ```bash
 open mRemoteNXT.xcodeproj
 ```
 
-Apoi Cmd+R.
+Then Cmd+R.
 
-## 4. Instalare locala
+## 4. Local install
 
 ```bash
 cp -R .build-xcode/Build/Products/Debug/mRemoteNXT.app /Applications/
 open /Applications/mRemoteNXT.app
 ```
 
-## 5. Probleme cunoscute la build
+## 5. Known build issues
 
-- **`Metal Toolchain not found`** — ruleaza `xcodebuild -downloadComponent MetalToolchain`.
-- **`'freerdp/freerdp.h' not found`** — `brew install freerdp`. Verifica `ls /opt/homebrew/opt/freerdp/include/freerdp3/freerdp/freerdp.h`.
-- **`Cannot find type 'MRNGCore' in scope`** — ruleaza `xcodegen generate` dupa
-  ce ai adaugat fisiere noi in `App/`.
-- **Warning despre deployment target** (e.g. `dylib built for macOS 26`) — benign,
-  dylib-urile brew sunt construite pentru macOS 26 dar app-ul ruleaza fara probleme.
+- **`Metal Toolchain not found`** — run `xcodebuild -downloadComponent MetalToolchain`.
+- **`'freerdp/freerdp.h' not found`** — `brew install freerdp`. Verify with
+  `ls /opt/homebrew/opt/freerdp/include/freerdp3/freerdp/freerdp.h`.
+- **`Cannot find type 'MRNGCore' in scope`** — run `xcodegen generate` after
+  you add new files into `App/`.
+- **Deployment-target warning** (e.g. `dylib built for macOS 26`) — benign;
+  the brew dylibs are built for macOS 26 but the app runs fine.
 
-## 6. Validare crypto (optional, CLI)
+## 6. Crypto validation (optional, CLI)
 
 ```bash
-swift run mrngprobe /cale/catre/confCons.xml
+swift run mrngprobe /path/to/confCons.xml
 ```
 
-Printeaza statistici (numar noduri, tipuri de conexiuni) si valideaza ca
-decriptarea reuseste pe toate parolele.
+Prints statistics (node count, connection types) and validates that
+decryption succeeds for all passwords.

@@ -1,100 +1,103 @@
 # mRemoteNXT
 
-Client multi-protocol pentru macOS (SSH, RDP, Telnet, SFTP, HTTP/HTTPS), cu
-import nativ al fisierelor `confCons.xml` din **mRemoteNG**.
+> Romanian: see [README.ro.md](README.ro.md)
 
-Scris ca alternativa nativa Mac pentru cei care folosesc mRemoteNG pe Windows
-si nu vor sa renunte la arborele de conexiuni, parolele criptate si layout-ul
-cu tab-uri si paneluri.
+Native macOS multi-protocol remote connection client (SSH, RDP, Telnet,
+SFTP, HTTP/HTTPS) with direct import of `confCons.xml` files from
+**mRemoteNG**.
 
-> Status: **alpha**. Functional zilnic pe ~700 conexiuni reale, dar sunt
-> features lipsa si bug-uri care apar pe configuri exotice. Vezi
-> [Limitari cunoscute](#limitari-cunoscute).
+Written as a native Mac alternative for people who use mRemoteNG on
+Windows and don't want to give up the connection tree, encrypted passwords
+and the tabs+panels layout.
 
-## Capturi de ecran
+> Status: **alpha**. Used daily against ~700 real connections, but some
+> features are missing and exotic configurations can hit bugs. See
+> [Known limitations](#known-limitations).
 
-*(de adaugat — porneste app-ul cu un confCons.xml de test.)*
+## Screenshots
 
-## Ce merge
+*(to be added — launch the app with a test `confCons.xml`.)*
 
-- **Import direct** `confCons.xml` (schema 2.6, passphrase implicita `mR3m` sau
-  proprie). Crypto validat byte-exact (PBKDF2-HMAC-SHA1 + AES-256-GCM).
-- **Arbore de conexiuni** cu foldere, mostenire de atribute, drag&drop reorder,
-  iconite originale mRemoteNG, linii de ghidaj.
-- **Paneluri** — gruparea conexiunilor in tab-uri de top, ca pe Windows.
-- **Cautare / filtru** pe nume, host, protocol, descriere.
-- **SSH** + **Telnet** embedat in tab (PTY peste `ssh`/`telnet` de sistem,
-  prin SwiftTerm). Copy-on-select, click-dreapta = paste (stil PuTTY).
-- **SFTP** in terminal (click-dreapta pe conexiune SSH → "Transfer fisiere").
-- **RDP** embedat prin **FreeRDP** (canalele GFX/disp/cliprdr cablate manual,
-  resize live, scaling DPI corect pe Retina, Ctrl+Alt+Del prin meniu).
-- **HTTP / HTTPS** embedat in `WKWebView` cu autofill pentru user + parola din
-  arbore (util pentru web-UI de routere / iLO / switch-uri).
-- **External Tools** cu macro-uri (`%Host% %Username% %Port% %Password%
-  %Domain% %Name%`) — rulate intr-un tab terminal.
-- **Editor de conexiune** stil Royal TSX (modal cu categorii: General /
-  Conexiune / Credentiale / Aspect / Avansat) + status bar in josul
-  sidebar-ului cu host / user / parola click-to-copy.
-- **Salvare cu backup automat** in `backups/confCons-<timestamp>.xml` la
-  fiecare scriere (fisierul tau original nu se pierde niciodata).
-- **Teme terminal** (Implicit, Solarized, Dracula, etc.), font reglabil
-  live, zoom Cmd+/Cmd-.
+## Features
 
-## Ce NU merge inca
+- **Direct `confCons.xml` import** (schema 2.6, default passphrase `mR3m`
+  or a custom one). Crypto validated byte-exact against real files
+  (PBKDF2-HMAC-SHA1 + AES-256-GCM).
+- **Connection tree** with folders, attribute inheritance, drag&drop reorder,
+  original mRemoteNG icons, guide lines.
+- **Panels** — group connections into top-level tabs like on Windows.
+- **Search / filter** by name, host, protocol, description.
+- **SSH** + **Telnet** embedded in tabs (PTY over system `ssh`/`telnet`
+  via SwiftTerm). PuTTY-style copy-on-select + right-click paste.
+- **SFTP** in terminal (right-click an SSH connection → "Transfer files").
+- **RDP** embedded via **FreeRDP** (GFX/disp/cliprdr channels wired by hand,
+  live resize, correct DPI scaling on Retina, Ctrl+Alt+Del via menu).
+- **HTTP / HTTPS** embedded in `WKWebView` with auto-fill of username +
+  password from the tree (handy for router / iLO / switch web UIs).
+- **External Tools** with macros (`%Host% %Username% %Port% %Password%
+  %Domain% %Name%`) — executed in a terminal tab.
+- **Connection editor** modal in Royal TSX style (categories: General /
+  Connection / Credentials / Appearance / Advanced) + a bottom status bar
+  with host / user / password click-to-copy.
+- **Auto-backup on save** to `backups/confCons-<timestamp>.xml` on every
+  write (your original file is never lost).
+- **Terminal themes** (Default, Solarized, Dracula, etc.), live-adjustable
+  font size, zoom Cmd+/Cmd-.
 
-- `FullFileEncryption="true"` (intregul XML criptat) — neimplementat.
-- Schema `ConfVersion > 2.6` — netestat.
-- Tab inheritance pentru `Panel` peste niveluri multiple — partial.
-- RDP: redirect clipboard imagine, redirect drive / sunet, cursor remote
-  vizibil (pointer set/new callbacks).
-- VNC (planificat).
-- Aplicatii externe (`IntApp` nodes) — lansare neimplementata.
-- Quick Connect (URL `ssh://user@host:port`) din CLI.
+## Known limitations
 
-## Cerinte sistem
+- `FullFileEncryption="true"` (whole XML encrypted) — not implemented.
+- Schema `ConfVersion > 2.6` — untested.
+- `Panel` inheritance across multiple levels — partial.
+- RDP: image-clipboard redirect, drive / sound redirect, remote cursor
+  visibility (pointer set/new callbacks).
+- VNC (planned).
+- External applications (`IntApp` nodes) — launching not implemented.
+- Quick Connect (URL `ssh://user@host:port`) from CLI.
 
-- macOS 14 (Sonoma) sau mai nou.
-- Xcode 16+ (cu Metal Toolchain — vezi [BUILD.md](BUILD.md)).
-- Homebrew cu `freerdp` (3.x) si `xcodegen`.
+## System requirements
 
-## Instalare
+- macOS 14 (Sonoma) or newer.
+- Xcode 16+ (with Metal Toolchain — see [BUILD.md](BUILD.md)).
+- Homebrew with `freerdp` (3.x) and `xcodegen`.
 
-Nu exista release pre-compilat momentan. Vezi [BUILD.md](BUILD.md) pentru
-build local.
+## Installation
 
-Daca downloadezi vreodata un `.dmg` din Releases, e semnat ad-hoc — vei
-avea nevoie sa permiti executia:
+No pre-built release yet. See [BUILD.md](BUILD.md) for a local build.
+
+If you ever download a `.dmg` from Releases, it is ad-hoc signed — you'll
+need to allow execution:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/mRemoteNXT.app
 ```
 
-## Licenta
+## License
 
-**GPL-2.0-or-later**. Vezi [LICENSE](LICENSE).
+**GPL-2.0-or-later**. See [LICENSE](LICENSE).
 
-Folosesc iconite preluate din proiectul oficial
-[mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) (GPL-2.0), motiv pentru
-care si acest proiect este sub aceeasi licenta. Codul si formatul `confCons.xml`
-au fost re-implementate independent (nu e port de cod) din observarea
-fisierelor reale produse de mRemoteNG.
+The bundled icon set is taken from the official
+[mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) project (GPL-2.0),
+which is why this project is under the same license. The code and the
+`confCons.xml` format were re-implemented independently (not a port of
+their code) from observation of real files produced by mRemoteNG.
 
-## Crediti / dependinte
+## Credits / dependencies
 
-- [mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) — formatul `confCons.xml`
-  si setul de iconite (GPL-2.0).
+- [mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) — `confCons.xml`
+  format and icon set (GPL-2.0).
 - [FreeRDP](https://github.com/FreeRDP/FreeRDP) — RDP client library
   (Apache-2.0).
-- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) — terminal emulator
-  (MIT).
+- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) — terminal
+  emulator (MIT).
 - Apple SwiftUI / AppKit / WebKit / CryptoKit / CommonCrypto.
 
 ## Disclaimer
 
-Acest proiect nu este afiliat cu, nu este sustinut de si nu este garantat de
-echipa mRemoteNG. "mRemoteNG" este folosit doar ca referinta de
-compatibilitate de format.
+This project is not affiliated with, endorsed by, or warranted by the
+mRemoteNG team. "mRemoteNG" is used only as a format-compatibility
+reference.
 
-## Autor
+## Author
 
 Razvan Cremenescu — <https://github.com/cremenescu>
