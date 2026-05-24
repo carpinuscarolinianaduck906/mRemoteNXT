@@ -33,7 +33,7 @@ ranges, no real hosts.
 
 ## Features
 
-- **Direct `confCons.xml` import** (schema 2.6, default passphrase `mR3m`
+- **Direct `confCons.xml` import** (schema 2.6, with mRemoteNG's default passphrase
   or a custom one). Crypto validated byte-exact against real files
   (PBKDF2-HMAC-SHA1 + AES-256-GCM).
 - **Connection tree** with folders, attribute inheritance, drag&drop reorder,

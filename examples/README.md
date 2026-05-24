@@ -14,9 +14,9 @@ A ready-to-open `confCons.xml` (mRemoteNG 2.6 schema) with:
 - **A variety of icons** from the bundled mRemoteNG set (Router,
   Switch, Firewall, Web Server, Database, ESX, Workstation, Linux,
   WiFi, Backup, …).
-- **Encrypted passwords** using the default mRemoteNG passphrase
-  `mR3m` (PBKDF2-HMAC-SHA1 1000 iterations + AES-256-GCM, AAD = salt).
-  All passwords decrypt cleanly inside the app.
+- **Encrypted passwords** using mRemoteNG's documented default passphrase
+  (PBKDF2-HMAC-SHA1 1000 iterations + AES-256-GCM, AAD = salt). All
+  passwords decrypt cleanly inside the app.
 
 All hostnames use IANA documentation ranges (`192.0.2.0/24`,
 `198.51.100.0/24`, `203.0.113.0/24`) and the `.example` TLD, so

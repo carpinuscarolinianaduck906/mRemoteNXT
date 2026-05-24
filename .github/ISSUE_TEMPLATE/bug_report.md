@@ -37,7 +37,7 @@ assignees: cremenescu
 <!-- DO NOT paste the file. -->
 - mRemoteNG version that produced it (if known):
 - Schema `ConfVersion`:
-- Uses default `mR3m` master password? yes / no
+- Uses mRemoteNG's default master password (not custom)? yes / no
 - `FullFileEncryption`? true / false
 
 ## Crash report
