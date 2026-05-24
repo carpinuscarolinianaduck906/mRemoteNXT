@@ -16,7 +16,20 @@ and the tabs+panels layout.
 
 ## Screenshots
 
-*(to be added — launch the app with a test `confCons.xml`.)*
+![Main view — connection tree with an SSH tab open](examples/screenshots/screenshot-hero.png)
+
+<details>
+<summary>More screenshots</summary>
+
+![Empty workspace placeholder when no connection is open](examples/screenshots/screenshot-main.png)
+
+![Settings — Appearance pane (UI font size, terminal theme, row height, toggles)](examples/screenshots/screenshot-settings.png)
+
+</details>
+
+The data shown is the demo file at
+[`examples/demo-config.xml`](examples/demo-config.xml) — IANA documentation
+ranges, no real hosts.
 
 ## Features
 
